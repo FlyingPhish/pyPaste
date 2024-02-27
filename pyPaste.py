@@ -3,7 +3,6 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 import pyautogui
-import time
 
 class StringSenderApp:
     def __init__(self, root):
