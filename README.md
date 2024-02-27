@@ -2,6 +2,9 @@
 
 This Python script implements a GUI-based application, named **pyPaste**, designed to automate the process of sending strings (text inputs) to the system or an application interface, for example, VMs and remote sessions (RDP, Citrix, etc) where shared clipboards are disabled. The application allows users to input text, specify a delay before sending the text, and manage a history of sent strings, including features to resend, delete, obfuscate, and deobfuscate strings. You can use this to paste code or paragraphs.
 
+<img width="626" alt="image" src="https://github.com/FlyingPhish/pyPaste/assets/46652779/c4d95bd9-7b28-49ef-828f-52a61effab95">
+
+
 ### Key Features
 
 - **Text and Delay Input**: Users can input the text they wish to send and specify a delay (in seconds) before the text is sent.
