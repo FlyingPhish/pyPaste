@@ -1,25 +1,57 @@
+# pyPaste
+
 ### Overview
 
-This Python script implements a GUI-based application, named **pyPaste**, designed to automate the process of sending strings (text inputs) to the system or an application interface, for example, VMs and remote sessions (RDP, Citrix, etc) where shared clipboards are disabled. The application allows users to input text, specify a delay before sending the text, and manage a history of sent strings, including features to resend, delete, obfuscate, and deobfuscate strings. You can use this to paste code or paragraphs.
-
-<img width="626" alt="image" src="https://github.com/FlyingPhish/pyPaste/assets/46652779/c4d95bd9-7b28-49ef-828f-52a61effab95">
-
+**pyPaste** is a Python GUI application designed to automate text and hotkey input for systems where clipboard functionality is limited or disabled, such as VMs, remote sessions (RDP, Citrix), and secure environments. The application features a horizontal layout optimized for wide screens and provides comprehensive text input automation and hotkey management.
 
 ### Key Features
 
-- **Text and Delay Input**: Users can input the text they wish to send and specify a delay (in seconds) before the text is sent.
-- **Send Functionality**: After the specified delay, the application uses `pyautogui.typewrite` to simulate typing the input text.
-- **History Management**: The application maintains a history of sent texts. Users can resend, delete, or obfuscate/deobfuscate these entries.
-- **Error Handling**: The application provides error messages for invalid delay times or other issues during text sending.
+#### Text Input
+- **Multi-line Text Entry**: Large text area supporting paragraphs, code blocks, and formatted content
+- **Configurable Delays**: Customizable delay (0-60 seconds) before text transmission
+- **Quick Actions**: Instant access to common keys (Enter, Tab, Esc)
 
-### Implementation Details
+#### Hotkey Management
+- **Common Shortcuts**: Pre-configured buttons for frequently used combinations (Ctrl+C, Ctrl+V, Ctrl+Z, Alt+F4, Win+R, Ctrl+Alt+Delete)
+- **Custom Hotkeys**: Build custom key combinations using modifiers (Ctrl, Alt, Shift, Win) with any key
+- **Live Preview**: Real-time preview of custom hotkey combinations
+- **Cross-Platform**: Automatic platform detection for proper modifier key mapping (Win/Cmd)
 
-- **Tkinter GUI**: The interface is built using Tkinter, with a simple layout consisting of input fields for text and delay, a send button, and a history section with management options.
-- **Delayed Sending**: The delay functionality is implemented using the `after` method from Tkinter, which waits for the specified time (in milliseconds) before executing the typing simulation.
-- **History Features**: Users can interact with the history of sent strings through buttons that allow resending, deleting, and obfuscating (replacing the string with asterisks) or deobfuscating (restoring the original string) entries.
+#### History Management
+- **Comprehensive History**: Tracks both text inputs and hotkey combinations
+- **Privacy Controls**: Toggle visibility for sensitive text (obfuscation with asterisks)
+- **Quick Actions**: Resend, copy to clipboard, delete, or clear all history
+- **Persistent Session**: History maintained throughout application session
+
+#### User Interface
+- **Horizontal Layout**: Three-column design optimized for wide screens
+- **Responsive Design**: Proper scaling and space utilization
+- **Status Feedback**: Real-time status updates and error handling
+- **Intuitive Controls**: Clean, organized interface with logical grouping
+
+### Architecture
+
+The application follows a modular architecture with clean separation of concerns:
+
+- **Core Components**:
+  - `HotkeyManager`: Cross-platform hotkey parsing and key mapping
+  - `HistoryManager`: Session history with privacy controls
+  
+- **UI Framework**:
+  - `HorizontalInputFrame`: Text input with delay controls
+  - `HorizontalHotkeyFrame`: Common and custom hotkey management
+  - `HorizontalHistoryFrame`: History display and management
+  - `UIComponentFactory`: Reusable UI components
+
+- **Main Application**: `PyPasteHorizontalApp` orchestrates all components
 
 ### Installation and Usage
 
+#### Requirements
+- Python 3.7+
+- Required packages: `tkinter`, `pyautogui`
+
+#### Setup
 1. Ensure Python 3.x is installed on your system.
 2. Install the required packages using pip. I recommend using venv wherever possible:
    ```
