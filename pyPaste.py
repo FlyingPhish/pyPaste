@@ -14,7 +14,10 @@ class StringSenderApp:
         # Set up platform-specific configurations
         self.configure_for_platform()
         
-        self.history = []  # List to store history of strings
+        # Store real and display state
+        self.history = []  # List to store actual text history
+        self.history_display_state = []  # List to track if entries are obfuscated (True) or visible (False)
+        self.obfuscate_by_default = True  # Default obfuscation setting
         
         # Main Frame for input and sending
         self.input_frame = tk.Frame(self.root)
@@ -57,8 +60,22 @@ class StringSenderApp:
 
     def setup_history_ui(self):
         # History Frame
-        self.history_frame = tk.LabelFrame(self.root, text="History")
+        self.history_frame = tk.LabelFrame(self.root, text="History (Obfuscated by Default)")
         self.history_frame.pack(padx=10, pady=10, fill="both", expand=True)
+        
+        # Option frame with checkbox for obfuscation setting
+        options_frame = tk.Frame(self.history_frame)
+        options_frame.pack(side=tk.TOP, fill=tk.X, padx=5, pady=(5, 0))
+        
+        # Obfuscation checkbox
+        self.obfuscate_var = tk.BooleanVar(value=self.obfuscate_by_default)
+        self.obfuscate_checkbox = tk.Checkbutton(
+            options_frame, 
+            text="Obfuscate new entries", 
+            variable=self.obfuscate_var,
+            command=self.update_obfuscation_setting
+        )
+        self.obfuscate_checkbox.pack(side=tk.LEFT)
         
         # History Listbox with scrollbar
         listbox_frame = tk.Frame(self.history_frame)
@@ -85,16 +102,26 @@ class StringSenderApp:
         self.delete_button = tk.Button(self.history_buttons_frame, text="Delete", command=self.delete_string)
         self.delete_button.pack(fill="x", pady=2)
         
-        self.obfuscate_button = tk.Button(self.history_buttons_frame, text="Obfuscate", command=self.obfuscate_string)
-        self.obfuscate_button.pack(fill="x", pady=2)
+        self.reveal_button = tk.Button(self.history_buttons_frame, text="Reveal", command=self.deobfuscate_string)
+        self.reveal_button.pack(fill="x", pady=2)
         
-        self.deobfuscate_button = tk.Button(self.history_buttons_frame, text="Deobfuscate", command=self.deobfuscate_string)
-        self.deobfuscate_button.pack(fill="x", pady=2)
+        self.hide_button = tk.Button(self.history_buttons_frame, text="Hide", command=self.obfuscate_string)
+        self.hide_button.pack(fill="x", pady=2)
+        
+        # Button to toggle all entries
+        self.toggle_all_button = tk.Button(self.history_buttons_frame, text="Toggle All", command=self.toggle_all_entries)
+        self.toggle_all_button.pack(fill="x", pady=2)
         
         # Status bar
         self.status_var = tk.StringVar(value="Ready")
         self.status_bar = tk.Label(self.root, textvariable=self.status_var, bd=1, relief=tk.SUNKEN, anchor=tk.W)
         self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+    
+    def update_obfuscation_setting(self):
+        """Update the obfuscation setting based on checkbox state"""
+        self.obfuscate_by_default = self.obfuscate_var.get()
+        status = "enabled" if self.obfuscate_by_default else "disabled"
+        self.show_status(f"Default obfuscation {status}")
 
     def send_keys(self):
         """Get the input string and send it after a delay"""
@@ -146,10 +173,19 @@ class StringSenderApp:
             self.show_status("Error while sending keys")
     
     def add_to_history(self, string):
-        """Add a string to history"""
+        """Add a string to history with obfuscation based on current setting"""
         self.history.append(string)
-        self.history_listbox.insert(tk.END, string)
-        self.show_status(f"Added to history: '{string[:20]}{'...' if len(string) > 20 else ''}'")
+        
+        # Determine if this entry should be obfuscated
+        is_obfuscated = self.obfuscate_by_default
+        self.history_display_state.append(is_obfuscated)
+        
+        # Display the actual or obfuscated string
+        display_string = '*' * len(string) if is_obfuscated else string
+        self.history_listbox.insert(tk.END, display_string)
+        
+        status_prefix = "Added to history (obfuscated): " if is_obfuscated else "Added to history: "
+        self.show_status(f"{status_prefix}'{string[:20]}{'...' if len(string) > 20 else ''}'")
     
     def resend_string(self):
         """Resend a string from history"""
@@ -168,7 +204,7 @@ class StringSenderApp:
         selection = self.history_listbox.curselection()
         if selection:
             index = selection[0]
-            string = self.history[index]
+            string = self.history[index]  # Always copy the actual string
             self.root.clipboard_clear()
             self.root.clipboard_append(string)
             self.show_status("Copied to clipboard")
@@ -181,6 +217,7 @@ class StringSenderApp:
         if selection:
             index = selection[0]
             del self.history[index]
+            del self.history_display_state[index]
             self.history_listbox.delete(index)
             self.show_status("Deleted from history")
         else:
@@ -191,9 +228,13 @@ class StringSenderApp:
         selection = self.history_listbox.curselection()
         if selection:
             index = selection[0]
-            self.history_listbox.delete(index)
-            self.history_listbox.insert(index, '*' * len(self.history[index]))
-            self.show_status("String obfuscated")
+            if not self.history_display_state[index]:  # Only obfuscate if not already obfuscated
+                self.history_listbox.delete(index)
+                self.history_listbox.insert(index, '*' * len(self.history[index]))
+                self.history_display_state[index] = True
+                self.show_status("String hidden")
+            else:
+                self.show_status("String is already hidden")
         else:
             self.show_status("No history item selected")
     
@@ -202,12 +243,36 @@ class StringSenderApp:
         selection = self.history_listbox.curselection()
         if selection:
             index = selection[0]
-            actual_string = self.history[index]
-            self.history_listbox.delete(index)
-            self.history_listbox.insert(index, actual_string)
-            self.show_status("String revealed")
+            if self.history_display_state[index]:  # Only reveal if currently obfuscated
+                actual_string = self.history[index]
+                self.history_listbox.delete(index)
+                self.history_listbox.insert(index, actual_string)
+                self.history_display_state[index] = False
+                self.show_status("String revealed")
+            else:
+                self.show_status("String is already visible")
         else:
             self.show_status("No history item selected")
+    
+    def toggle_all_entries(self):
+        """Toggle visibility of all entries"""
+        if not self.history:
+            self.show_status("History is empty")
+            return
+            
+        # Determine the action based on majority state
+        obfuscated_count = sum(self.history_display_state)
+        # If more than half are obfuscated, reveal all; otherwise, hide all
+        reveal_all = obfuscated_count > len(self.history) / 2
+        
+        for i in range(len(self.history)):
+            self.history_listbox.delete(0)  # Always delete from position 0 as list shifts
+            display_string = self.history[i] if reveal_all else '*' * len(self.history[i])
+            self.history_listbox.insert(tk.END, display_string)
+            self.history_display_state[i] = not reveal_all
+        
+        status = "revealed" if reveal_all else "hidden"
+        self.show_status(f"All strings {status}")
     
     def show_status(self, message):
         """Update the status bar with a message"""
